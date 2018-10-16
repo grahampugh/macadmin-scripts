@@ -69,7 +69,7 @@ def get_board_id():
         raise ReplicationError(err)
 
 
-def is_a_vm(arg):
+def is_a_vm():
     '''Determines if the script is being run in a virtual machine'''
     sysctl_cmd = ['/usr/sbin/sysctl', 'machdep.cpu.features']
     try:
