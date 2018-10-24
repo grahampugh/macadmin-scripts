@@ -74,10 +74,10 @@ def is_a_vm():
     sysctl_cmd = ['/usr/sbin/sysctl', 'machdep.cpu.features']
     try:
         sysctl_output = subprocess.check_output(sysctl_cmd)
-        cpuFeatures = sysctl_output.split(" ")
+        cpu_features = sysctl_output.split(" ")
         is_vm = False
-        for i in range(len(cpuFeatures)):
-            if cpuFeatures[i] == "VMM":
+        for i in range(len(cpu_features)):
+            if cpu_features[i] == "VMM":
                 is_vm = True
     except subprocess.CalledProcessError, err:
         raise ReplicationError(err)
