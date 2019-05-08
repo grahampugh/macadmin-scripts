@@ -29,13 +29,11 @@ import gzip
 import os
 import plistlib
 import subprocess
-import re
 import sys
 import urlparse
 import xattr
 from xml.dom import minidom
 from xml.parsers.expat import ExpatError
-from operator import itemgetter
 from distutils.version import LooseVersion
 
 
@@ -62,7 +60,7 @@ def get_board_id():
         ioreg_output = subprocess.check_output(ioreg_cmd).splitlines()
         for line in ioreg_output:
             if 'board-id' in line:
-                board_id = line.split(" ")[-1]
+                board_id = line.split("<")[-1]
                 board_id = board_id[board_id.find('<"')+2:board_id.find('">')]
                 return board_id
     except subprocess.CalledProcessError, err:
@@ -128,6 +126,15 @@ def get_seed_catalog(seedname='DeveloperSeed'):
     try:
         seed_catalogs = plistlib.readPlist(SEED_CATALOGS_PLIST)
         return seed_catalogs.get(seedname)
+    except (OSError, ExpatError, AttributeError, KeyError):
+        return ''
+
+
+def get_seeding_programs():
+    '''Returns the list of seeding program names'''
+    try:
+        seed_catalogs = plistlib.readPlist(SEED_CATALOGS_PLIST)
+        return seed_catalogs.keys()
     except (OSError, ExpatError, AttributeError, KeyError):
         return ''
 
@@ -367,6 +374,7 @@ def get_unsupported_models(filename):
                 unsupported_models = line.split(" ")[-1][:-1]
                 return unsupported_models
 
+
 def download_and_parse_sucatalog(sucatalog, workdir, ignore_cache=False):
     '''Downloads and returns a parsed softwareupdate catalog'''
     try:
@@ -501,7 +509,7 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('--seedprogram', default='',
                         help='Which Seed Program catalog to use. Valid values '
-                        'are CustomerSeed, DeveloperSeed, and PublicSeed.')
+                        'are %s.' % ', '.join(get_seeding_programs()))
     parser.add_argument('--catalogurl', default='',
                         help='Software Update catalog URL. This option '
                         'overrides any seedprogram option.')
@@ -539,8 +547,12 @@ def main():
                         'for the current device.')
     parser.add_argument('--version', metavar='match_version',
                         default='',
-                        help='Selects the lowest valid build ID matching'
-                        'the selected version.')
+                        help='Selects the lowest valid build ID matching '
+                        'the selected version (e.g. 10.14.3).')
+    parser.add_argument('--os', metavar='match_os',
+                        default='',
+                        help='Selects the lowest valid build ID matching '
+                        'the selected OS version (e.g. 10.14).')
     args = parser.parse_args()
 
     # show this Mac's info
@@ -565,6 +577,9 @@ def main():
             print >> sys.stderr, (
                 'Could not find a catalog url for seed program %s'
                 % args.seedprogram)
+            print >> sys.stderr, (
+                'Valid seeding programs are: %s'
+                % ', '.join(get_seeding_programs()))
             exit(-1)
     else:
         su_catalog_url = get_default_catalog()
@@ -618,16 +633,23 @@ def main():
 
         # skip if build is not suitable for current device
         # and a validation parameter was chosen
-        if not_valid and (args.validate or args.auto or args.version):
+        if not_valid and (args.validate or args.auto or args.version or args.os):
             continue
 
         # skip if a version is selected and it does not match
         if args.version and args.version != product_info[product_id]['version']:
             continue
 
+        # skip if a version is selected and it does not match
+        if args.os:
+            major = product_info[product_id]['version'].split('.', 2)[:2]
+            os_version = '.'.join(major)
+            if args.os != os_version:
+                continue
+
         # determine the lowest valid build ID and select this
         # when using auto and version options
-        if (args.auto or args.version) and 'Beta' not in product_info[product_id]['title']:
+        if (args.auto or args.version or args.os) and 'Beta' not in product_info[product_id]['title']:
             try:
                 lowest_valid_build
             except NameError:
@@ -657,7 +679,7 @@ def main():
 
         elif args.current:
             # automatically select matching build ID if current option used
-            if build_info == product_info[product_id]['BUILD']:
+            if build_info[0] == product_info[product_id]['BUILD']:
                 answer = index+1
                 break
 
@@ -669,6 +691,9 @@ def main():
     # Output a plist of available updates and quit if list option chosen
     if args.list:
         plistlib.writePlist(pl, output_plist)
+        print ('\n'
+               'Valid seeding programs are: %s'
+               % ', '.join(get_seeding_programs()))
         exit(0)
 
     # check for validity of specified build if argument supplied
@@ -690,18 +715,40 @@ def main():
             print ('\n'
                    'Build %s is not available. '
                    'Run again without --current argument '
-                   'to select a valid build to download.\n' % build_info)
+                   'to select a valid build to download.\n' % build_info[0])
             exit(0)
         else:
-            print '\nBuild %s available. Downloading #%s...\n' % (build_info, answer)
-    elif args.auto or args.version:
+            print '\nBuild %s available. Downloading #%s...\n' % (build_info[0], answer)
+    elif args.version:
         try:
             answer
         except NameError:
             print ('\n'
                    'Item # %s is not available. '
+                   'Run again without --version argument '
+                   'to select a valid build to download.\n' % args.version)
+            exit(0)
+        else:
+            print '\nBuild %s selected. Downloading #%s...\n' % (lowest_valid_build, answer)
+    elif args.os:
+        try:
+            answer
+        except NameError:
+            print ('\n'
+                   'Item # %s is not available. '
+                   'Run again without --os argument '
+                   'to select a valid build to download.\n' % args.os)
+            exit(0)
+        else:
+            print '\nBuild %s selected. Downloading #%s...\n' % (lowest_valid_build, answer)
+    elif args.auto:
+        try:
+            answer
+        except NameError:
+            print ('\n'
+                   'No valid version available. '
                    'Run again without --auto argument '
-                   'to select a valid build to download.\n' % answer)
+                   'to select a valid build to download.\n')
             exit(0)
         else:
             print '\nBuild %s selected. Downloading #%s...\n' % (lowest_valid_build, answer)
