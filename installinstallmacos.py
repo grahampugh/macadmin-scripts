@@ -449,12 +449,23 @@ def os_installer_product_info(catalog, workdir, ignore_cache=False):
     return product_info
 
 
+# FIXME: DRY (Also applicable to whole script ;))
+# FIXME: Use pkgutil, not distutils, for dealing with non-python package verions
 def get_lowest_version(current_item, lowest_item):
     '''Compares versions between two values and returns the lowest value'''
     if LooseVersion(current_item) < LooseVersion(lowest_item):
         return current_item
     else:
         return lowest_item
+
+# FIXME: DRY (Also applicable to whole script ;))
+# FIXME: Use pkgutil, not distutils, for dealing with non-python package verions
+def get_latest_version(current_item, latest_item):
+    '''Compares versions between two values and returns the latest value'''
+    if LooseVersion(current_item) > LooseVersion(lowest_item):
+        return current_item
+    else:
+        return latest_item
 
 
 def replicate_product(catalog, product_id, workdir, ignore_cache=False):
@@ -544,14 +555,19 @@ def main():
                         'and only show appropriate builds.')
     parser.add_argument('--auto', action='store_true',
                         help='Automatically select the appropriate valid build '
-                        'for the current device.')
+                        'for the current device. Defaults to the lowest valid '
+                        'build, or latest if --latest is passed.')
     parser.add_argument('--version', metavar='match_version',
                         default='',
                         help='Selects the lowest valid build ID matching '
                         'the selected version (e.g. 10.14.3).')
+    parser.add_argument('--latest', action='store_true',
+                        help='Selects the latest valid build ID matching '
+                        'the selected version (e.g. 10.14.4).')
     parser.add_argument('--os', metavar='match_os',
                         default='',
-                        help='Selects the lowest valid build ID matching '
+                        help='Selects the lowest, or if --latest is passed, '
+                        'the latest, valid build ID matching '
                         'the selected OS version (e.g. 10.14).')
     args = parser.parse_args()
 
@@ -633,7 +649,7 @@ def main():
 
         # skip if build is not suitable for current device
         # and a validation parameter was chosen
-        if not_valid and (args.validate or args.auto or args.version or args.os):
+        if not_valid and (args.validate or args.auto or args.version or args.os or args.latest):
             continue
 
         # skip if a version is selected and it does not match
@@ -647,19 +663,19 @@ def main():
             if args.os != os_version:
                 continue
 
-        # determine the lowest valid build ID and select this
-        # when using auto and version options
-        if (args.auto or args.version or args.os) and 'Beta' not in product_info[product_id]['title']:
+        # determine the lowest or latest valid build ID and select this
+        # when using auto, os, latest and version options
+        if (args.auto or args.version or args.os or args.latest) and 'Beta' not in product_info[product_id]['title']:
+
             try:
-                lowest_valid_build
+                valid_build
             except NameError:
-                lowest_valid_build = product_info[product_id]['BUILD']
+                valid_build = product_info[product_id]['BUILD']
                 answer = index+1
             else:
-                lowest_valid_build = get_lowest_version(
-                                        product_info[product_id]['BUILD'],
-                                        lowest_valid_build)
-                if lowest_valid_build == product_info[product_id]['BUILD']:
+                f = get_latest_version if args.latest else get_lowest_version
+                valid_build = f(product_info[product_id]['BUILD'], valid_build)
+                if valid_build == product_info[product_id]['BUILD']:
                     answer = index+1
 
         # Write this build info to plist
@@ -749,6 +765,17 @@ def main():
                    'No valid version available. '
                    'Run again without --auto argument '
                    'to select a valid build to download.\n')
+            exit(0)
+        else:
+            print '\nBuild %s selected. Downloading #%s...\n' % (lowest_valid_build, answer)
+    elif args.latest:
+        try:
+            answer
+        except NameError:
+            print ('\n'
+                   'Item # %s is not available. '
+                   'Run again without --latest argument '
+                   'to select a valid build to download.\n' % args.os)
             exit(0)
         else:
             print '\nBuild %s selected. Downloading #%s...\n' % (lowest_valid_build, answer)
