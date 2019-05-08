@@ -462,7 +462,7 @@ def get_lowest_version(current_item, lowest_item):
 # FIXME: Use pkgutil, not distutils, for dealing with non-python package verions
 def get_latest_version(current_item, latest_item):
     '''Compares versions between two values and returns the latest value'''
-    if LooseVersion(current_item) > LooseVersion(lowest_item):
+    if LooseVersion(current_item) > LooseVersion(latest_item):
         return current_item
     else:
         return latest_item
