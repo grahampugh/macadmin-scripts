@@ -745,7 +745,7 @@ def main():
                    'to select a valid build to download.\n' % args.version)
             exit(0)
         else:
-            print '\nBuild %s selected. Downloading #%s...\n' % (lowest_valid_build, answer)
+            print '\nBuild %s selected. Downloading #%s...\n' % (valid_build, answer)
     elif args.os:
         try:
             answer
@@ -756,7 +756,7 @@ def main():
                    'to select a valid build to download.\n' % args.os)
             exit(0)
         else:
-            print '\nBuild %s selected. Downloading #%s...\n' % (lowest_valid_build, answer)
+            print '\nBuild %s selected. Downloading #%s...\n' % (valid_build, answer)
     elif args.auto:
         try:
             answer
@@ -767,7 +767,7 @@ def main():
                    'to select a valid build to download.\n')
             exit(0)
         else:
-            print '\nBuild %s selected. Downloading #%s...\n' % (lowest_valid_build, answer)
+            print '\nBuild %s selected. Downloading #%s...\n' % (valid_build, answer)
     elif args.latest:
         try:
             answer
@@ -778,7 +778,7 @@ def main():
                    'to select a valid build to download.\n' % args.os)
             exit(0)
         else:
-            print '\nBuild %s selected. Downloading #%s...\n' % (lowest_valid_build, answer)
+            print '\nBuild %s selected. Downloading #%s...\n' % (valid_build, answer)
     else:
         # default option to interactively offer selection
         answer = raw_input(
