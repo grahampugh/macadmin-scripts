@@ -782,7 +782,18 @@ def main():
             print ('\n'
                    'Item # %s is not available. '
                    'Run again without --latest argument '
-                   'to select a valid build to download.\n' % args.os)
+                   'to select a valid build to download.\n' % args.latest)
+            exit(0)
+        else:
+            print '\nBuild %s selected. Downloading #%s...\n' % (valid_build, answer)
+    elif args.boardid:
+        try:
+            answer
+        except NameError:
+            print ('\n'
+                   'Item # %s is not available. '
+                   'Run again without --latest argument '
+                   'to select a valid build to download.\n' % args.boardid)
             exit(0)
         else:
             print '\nBuild %s selected. Downloading #%s...\n' % (valid_build, answer)
