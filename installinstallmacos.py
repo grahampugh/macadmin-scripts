@@ -667,7 +667,7 @@ def main():
                 continue
 
         # skip if a boardid is selected and it does not match
-        if args.boardid and args.boardid not in product_info[product_key]['BoardIDs']:
+        if args.boardid and args.boardid not in product_info[product_id]['BoardIDs']:
             continue
 
         # determine the lowest or latest valid build ID and select this
