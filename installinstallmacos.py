@@ -564,6 +564,9 @@ def main():
     parser.add_argument('--latest', action='store_true',
                         help='Selects the latest valid build ID matching '
                         'the selected version (e.g. 10.14.4).')
+    parser.add_argument('--boardid',
+                        default='',
+                        help='Selects only builds with a matching build ID.')
     parser.add_argument('--os', metavar='match_os',
                         default='',
                         help='Selects the lowest, or if --latest is passed, '
@@ -662,6 +665,10 @@ def main():
             os_version = '.'.join(major)
             if args.os != os_version:
                 continue
+
+        # skip if a boardid is selected and it does not match
+        if args.boardid and args.boardid not in product_info[product_key]['BoardIDs']:
+            continue
 
         # determine the lowest or latest valid build ID and select this
         # when using auto, os, latest and version options
