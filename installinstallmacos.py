@@ -1343,7 +1343,7 @@ def main():
                         % seeding_program
                     )
                     xattr.setxattr(
-                        installer_app, "SeedProgram", seeding_program.encode()
+                        installer_app, "SeedProgram", seeding_program.encode("UTF-8")
                     )
             print("Product downloaded and installed to %s" % sparse_diskimage_path)
             if args.raw:
