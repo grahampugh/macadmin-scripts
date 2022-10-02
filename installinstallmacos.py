@@ -1063,48 +1063,44 @@ def main():
 
         # determine the latest valid build ID and select this
         # when using auto, os and version options
-        if args.auto or args.version or args.os:
-            if args.beta or "Beta" not in product_info[product_id]["title"]:
-                try:
-                    latest_valid_build
-                except NameError:
-                    latest_valid_build = product_info[product_id]["BUILD"]
+        if args.beta or "Beta" not in product_info[product_id]["title"]:
+            try:
+                latest_valid_build
+            except NameError:
+                latest_valid_build = product_info[product_id]["BUILD"]
+                # if using newer-than option, skip if not newer than the version
+                # we are checking against
+                if args.newer_than_version:
+                    latest_valid_build = get_latest_version(
+                        product_info[product_id]["version"], args.newer_than_version
+                    )
+                    if latest_valid_build == args.newer_than_version:
+                        continue
+                # if using renew option, skip if the same as the current version
+                if args.renew and build_info[0] == product_info[product_id]["version"]:
+                    continue
+                answer = index + 1
+            else:
+                latest_valid_build = get_latest_version(
+                    product_info[product_id]["BUILD"], latest_valid_build
+                )
+                if latest_valid_build == product_info[product_id]["BUILD"]:
                     # if using newer-than option, skip if not newer than the version
                     # we are checking against
                     if args.newer_than_version:
                         latest_valid_build = get_latest_version(
-                            product_info[product_id]["version"], args.newer_than_version
+                            product_info[product_id]["version"],
+                            args.newer_than_version,
                         )
                         if latest_valid_build == args.newer_than_version:
                             continue
                     # if using renew option, skip if the same as the current version
                     if (
                         args.renew
-                        and build_info[0] == product_info[product_id]["version"]
+                        and build_info[1] == product_info[product_id]["BUILD"]
                     ):
                         continue
                     answer = index + 1
-                else:
-                    latest_valid_build = get_latest_version(
-                        product_info[product_id]["BUILD"], latest_valid_build
-                    )
-                    if latest_valid_build == product_info[product_id]["BUILD"]:
-                        # if using newer-than option, skip if not newer than the version
-                        # we are checking against
-                        if args.newer_than_version:
-                            latest_valid_build = get_latest_version(
-                                product_info[product_id]["version"],
-                                args.newer_than_version,
-                            )
-                            if latest_valid_build == args.newer_than_version:
-                                continue
-                        # if using renew option, skip if the same as the current version
-                        if (
-                            args.renew
-                            and build_info[1] == product_info[product_id]["BUILD"]
-                        ):
-                            continue
-                        answer = index + 1
 
         # Write this build info to plist
         pl_index = {
@@ -1148,6 +1144,12 @@ def main():
 
     # Output a plist of available updates and quit if list option chosen
     if args.list:
+        try:
+            print("\nLatest valid build: %s (# %s)" % (latest_valid_build, answer))
+            pl["latest_valid_build"] = latest_valid_build
+        except NameError:
+            pl["latest_valid_build"] = ""
+            print("\nNo valid build found")
         write_plist(pl, output_plist)
         print("\nValid seeding programs are: %s\n" % ", ".join(get_seeding_programs()))
         exit(0)
