@@ -43,7 +43,11 @@ except ImportError:
 from xml.dom import minidom
 from xml.parsers.expat import ExpatError
 
-from packaging.version import LegacyVersion
+try:
+    from packaging.version import LegacyVersion
+except ImportError:
+    # python <=3.9
+    from packaging.version import Version as LegacyVersion
 
 try:
     import xattr
