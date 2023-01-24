@@ -47,7 +47,7 @@ try:
     from packaging.version import LegacyVersion
 except ImportError:
     # python <=3.9
-    from packaging.version import Version as LegacyVersion
+    from distutils.version import LooseVersion as LegacyVersion
 
 try:
     import xattr
