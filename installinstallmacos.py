@@ -43,7 +43,7 @@ except ImportError:
 from xml.dom import minidom
 from xml.parsers.expat import ExpatError
 
-from pkg_resources import parse_version as Version
+from packaging.version import LegacyVersion
 
 try:
     import xattr
@@ -704,7 +704,7 @@ def os_installer_product_info(
 def get_latest_version(current_item, latest_item):
     """Compares versions between two values and returns the latest (highest) value"""
     try:
-        if Version(current_item) > Version(latest_item):
+        if LegacyVersion(current_item) > LegacyVersion(latest_item):
             return current_item
         else:
             return latest_item
