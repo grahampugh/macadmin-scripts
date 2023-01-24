@@ -1068,7 +1068,7 @@ def main():
 
         # determine the latest valid build ID and select this
         # when using auto, os and version options
-        if args.auto or args.version or args.os:
+        if args.auto or args.version or args.os or args.list:
             if args.beta or "Beta" not in product_info[product_id]["title"]:
                 try:
                     latest_valid_build
@@ -1153,6 +1153,18 @@ def main():
 
     # Output a plist of available updates and quit if list option chosen
     if args.list:
+        if args.os:
+            print("\nBuild checked against OS filter: %s" % (args.os))
+            pl["validity_filter"] = "OS: %s" % (args.os)
+        elif args.version:
+            print("\nBuild checked against version filter: %s" % (args.version))
+            pl["validity_filter"] = "Version: %s" % (args.version)
+        try:
+            print("\nLatest valid build: %s (# %s)" % (latest_valid_build, answer))
+            pl["latest_valid_build"] = latest_valid_build
+        except NameError:
+            pl["latest_valid_build"] = ""
+            print("\nNo valid build found")
         write_plist(pl, output_plist)
         print("\nValid seeding programs are: %s\n" % ", ".join(get_seeding_programs()))
         exit(0)
