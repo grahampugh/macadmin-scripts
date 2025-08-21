@@ -3,9 +3,9 @@
 Some scripts that might be of use to macOS admins. Might be related to Munki;
 might not.
 
-These are currently only supported using Apple's Python on macOS. There is no support for running these on Windows or Linux.
+These are only supported on macOS. There is no support for running these on Windows or Linux.
 
-In macOS 12.3, Apple will be removing its Python 2.7 install. You'll need to provide your own Python to use these scripts. You may also need to install additional Python modules.
+In macOS 12.3, Apple stopped providung Python as part of macOS. You'll need to provide your own Python to use these scripts. You may also need to install additional Python modules.
 
 #### getmacosipsws.py
 
@@ -39,7 +39,7 @@ Product installation failed.
 Use a compatible Mac or select a different build compatible with your current hardware and try again. You may also have success running the script in a VM; the InstallationCheck script in versions of the macOS installer to date skips the checks (and returns success) when run on a VM. 
 
 ##### Important note for Catalina+
-Catalina privacy protections might interfere with the operation of this tool if you run it from ~/Desktop, ~/Documents, ~/Downloads or other directories protected in Catalina. Consider using /Users/Shared (or subdirectory) as the "working space" for this tool.
+macOS privacy protections might interfere with the operation of this tool if you run it from ~/Desktop, ~/Documents, ~/Downloads or other directories protected in macOS Catalina or later. Consider using /Users/Shared (or subdirectory) as the "working space" for this tool.
 
 
 ##### Alternate implementations
